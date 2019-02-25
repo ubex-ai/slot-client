@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,44 +9,142 @@
     <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap-grid.css">
     <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.css">
     <title>Document</title>
+    <style>
+        .example__container {
+            border: 3px solid #000;
+            padding-bottom: 1.5rem;
+            text-align: center;
+            display: inline-block;
+            font-size: 0;
+            margin-bottom: 2.2rem;
+            position: relative;
+        }
+
+        .example__container-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #fff;
+        }
+
+    </style>
 </head>
 <body>
 <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Demo</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Dropdown
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#">Ubex</a>
+                        <a class="dropdown-item" href="#">adRiver</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Яндекс</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#">Disabled</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+    </nav>
     <header class="header hero mb-3">
         <div class="row">
-            <div class="col-9 offset-3 pt-5"><h1 class="hero-title">Demo page</h1></div>
+            <div class="col-8 offset-lg-4 pt-5">
+                <h1 class="hero-title">Яндекс</h1>
+
+            </div>
         </div>
     </header>
     <div class="row">
-        <div class="col-3">
-            <ul class="nav flex-column">
+        <div class="col-lg-4">
+            <ul class="nav flex-column mb-5">
                 <li class="nav-item">
-                    <a class="nav-link active" href="#">Active</a>
+                    <a class="nav-link " href="./ubex.html">Ubex</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
+                    <a class="nav-link active" href="./yandex.html">Яндекс</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+                    <a class="nav-link" href="./adriver.html">Adriver</a>
                 </li>
             </ul>
             <!-- UBEX AdSlot start -->
-            <script src="./tests/slot.js"></script>
-            <ins class="ubex-slot" data-ubex-slot="1234567" data-ubex-client="123456" style="width: 160px; height: 320px; position: relative"></ins>
+            <script src="./slot.js"></script>
+            <div class="example__container">
+            <ins class="ubex-slot" data-ubex-slot="2" data-ubex-client="2"
+                 style="width: 240px; height: 400px; position: relative"></ins>
+                <div class="example__container-label">240x400</div>
+            </div>
             <script>
-                (ubexslot = window.ubexslot || []).push({});
+              (ubexslot = window.ubexslot || []).push({});
             </script>
             <!-- UBEX AdSlot end -->
         </div>
-        <div class="col-9">
-            <h2 class="mb-4">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <div class="col-lg-8">
+            <!-- UBEX AdSlot start -->
+            <script src="./slot.js"></script>
+            <div class="example__container sm-">
+                <ins class="ubex-slot" data-ubex-slot="1" data-ubex-client="2"
+                     style="width: 728px; height: 90px; position: relative"></ins>
+                <div class="example__container-label">728x90</div>
+            </div>
+            <script>
+              (ubexslot = window.ubexslot || []).push({});
+            </script>
+            <!-- UBEX AdSlot end -->
+            <div class="row">
+                <div class="col-lg-7">
+                    <h2 class="mb-4">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
+                        doloremque laudantium.</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                        laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+                        voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+                        non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                        laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+                        voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+                        non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                </div>
+                <div class="col-lg-5">
+                    <!-- UBEX AdSlot start -->
+                    <script src="./slot.js"></script>
+                    <div class="example__container">
+                        <ins class="ubex-slot" data-ubex-slot="3" data-ubex-client="2"
+                             style="width: 300px; height: 250px; position: relative"></ins>
+                        <div class="example__container-label">300x250</div>
+                    </div>
+                    <script>
+                      (ubexslot = window.ubexslot || []).push({});
+                    </script>
+                    <!-- UBEX AdSlot end -->
+                </div>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>

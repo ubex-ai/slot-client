@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "bootstrap": "^4.2.1",
     "fingerprintjs2": "^2.0.3",
     "promise-polyfill": "^8.1.0"
   },
@@ -21,6 +20,7 @@
     "babel-loader": "^8.0.5",
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
+    "bootstrap": "^4.3.1",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "mocha-loader": "^2.0.0",

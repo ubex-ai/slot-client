@@ -59,10 +59,10 @@ const Slot = function (containerElement, sendRequest) {
         });
 
         const btns = [
-            self.uiBtn('Реклама закрывает контент', closeAdAndSendRequest.bind(this, 1)),
-            self.uiBtn('Просмотрено несколько раз', closeAdAndSendRequest.bind(this, 2)),
-            self.uiBtn('Неприемлемая реклама', closeAdAndSendRequest.bind(this, 3)),
-            self.uiBtn('Не интересно', closeAdAndSendRequest.bind(this, 4))
+            self.uiBtn('Advertising closes content', closeAdAndSendRequest.bind(this, 1)),
+            self.uiBtn('Viewed several times', closeAdAndSendRequest.bind(this, 2)),
+            self.uiBtn('Unacceptable advertising', closeAdAndSendRequest.bind(this, 3)),
+            self.uiBtn('Not interested', closeAdAndSendRequest.bind(this, 4))
         ];
 
         for (var i = 0; i < btns.length - 1; i++) {

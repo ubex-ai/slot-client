@@ -5,6 +5,6 @@ const idPattern = 'ubex-';
 
 (document => {
 	document.querySelectorAll(`[id^="${idPattern}"]`).forEach(slot => {
-		render(<Slot id={slot.id.slice(idPattern.length)} />, slot);
+		render(<Slot slotId={slot.id.slice(idPattern.length)} />, slot);
 	});
 })(document);

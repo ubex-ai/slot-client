@@ -30,7 +30,7 @@ function sendRequest({ url, params, method = 'GET', body = null, headers = null 
 				reject(this, error);
 			*/
 		};
-		xhr.onerror = arg => new Error(arg);
+		xhr.onerror = arg => reject(new Error(arg));
 	});
 }
 

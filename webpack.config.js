@@ -5,7 +5,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const hostname = '0.0.0.0';
 const port = '8080';
 
-module.exports = function (env, argv) {
+module.exports = function(env, argv) {
 	return {
 		entry: './src/index.js',
 		plugins: [
@@ -16,7 +16,7 @@ module.exports = function (env, argv) {
 		],
 		output: {
 			path: path.resolve(__dirname, 'dist'),
-			filename: 'slot.js'
+			filename: 'slot.js',
 		},
 		module: {
 			rules: [
@@ -30,12 +30,12 @@ module.exports = function (env, argv) {
 					use: {
 						loader: 'babel-loader',
 					},
-				}
-			]
+				},
+			],
 		},
 		devServer: {
 			host: hostname,
-			port: port,
+			port,
 			open: false,
 		},
 		optimization: {
@@ -63,16 +63,17 @@ module.exports = function (env, argv) {
 			nodeEnv: 'production',
 			usedExports: true,
 			sideEffects: false,
-		},name: "your-project",
+		},
+		name: 'your-project',
 		resolve: {
 			alias: {
-				'react': 'preact-compat',
+				react: 'preact-compat',
 				'react-dom': 'preact-compat',
 				// Not necessary unless you consume a module using `createClass`
 				'create-react-class': 'preact-compat/lib/create-react-class',
 				// Not necessary unless you consume a module requiring `react-dom-factories`
-				'react-dom-factories': 'preact-compat/lib/react-dom-factories'
-			}
-		}
+				'react-dom-factories': 'preact-compat/lib/react-dom-factories',
+			},
+		},
 	};
 };

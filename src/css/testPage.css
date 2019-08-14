@@ -1,0 +1,12 @@
+* {
+	color: red;
+	font-family: 'Comic Sans, serif';
+}
+body {
+}
+.padder {
+	min-height: 980px; width: 200px; background: #333;
+}
+ins {
+	margin: 0 1em 1em -0;
+}

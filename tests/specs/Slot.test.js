@@ -1,43 +1,22 @@
-import {assert} from 'chai';
-import Slot from "../../src/Slot";
+import { Selector } from 'testcafe';
 
+fixture`Use build-in assertions`.page`http://0.0.0.0:8080/`;
 
-describe('AdSlot', () => {
-    const adSlot = Slot();
+class Page {
+	constructor() {
+		this.slots = Selector('div').withAttribute('data-ubex-slot');
+	}
+}
 
-    it('should be exist', async () => {
-        assert.typeOf(adSlot, 'object', 'Объект инициализирован');
-    });
+const page = new Page();
 
-    it('На странице есть контейнеры', function () {
-        assert.isAbove(document.getElementsByClassName('ubex-slot').length, 0, 'На странице есть контейнеры');
-    });
-
-    it('Для каждого контейнера есть объект Slot в slots с id слота и клиента', function () {
-
-    });
-
-    // Определить платформу и размер экрана
-    it('Должен уметь определять платформу', () => {
-        assert.typeOf(adSlot.getPlafrorm, 'function');
-        const platfrorm = adSlot.getPlafrorm();
-        assert.typeOf(platfrorm, 'string');
-        assert.equal(platfrorm, 'desktop');
-    });
-
-    it('Должен уметь определять размеры экрана', () => {
-        assert.typeOf(adSlot.screen, 'object');
-        assert.typeOf(adSlot.screen.getSize, 'function');
-        assert.typeOf(adSlot.screen.getSize(), 'array');
-        assert.lengthOf(adSlot.screen.getSize(), 2);
-    });
-
-    // 2. Отправить запрос за рекламой с данными о платформе и экране
-    it('Должен уметь отправить запрос за кодом с рекламой', (done) => {
-        assert.typeOf(adSlot.fetchCode, 'function');
-        adSlot.fetchCode().then(done);
-    });
-    // 3. Получить код баннера.
-    // 4. Создать iframe на месте вызова и положить туда код баннера
-    // 5. Подключить код pixel рядом с баннером
+test('Common tests', async  t => {
+	await  t
+		.expect(page.slots.count)
+		.gte(0)
+		.expect(page.slots.withAttribute('data-ubex-inv').exists)
+		.ok();
+	for (var i = 0; i < page.slots.count; i++)
+		await t.expect(page.slots.nth(i).find('.ubx-wrapper').exists).ok();
 });
+

@@ -1,15 +1,26 @@
-export default function Frame(props) {
+import { h, Component } from 'preact';
+import PropTypes from 'prop-types';
+function Frame({ url, size }) {
 	return (
 		<iframe
 			title="slotus_url"
-			src={props.url}
-			width={props.width}
-			height={props.height}
+			src={url}
+			width={size.w}
+			height={size.h}
 			scrolling="no"
 			marginWidth="0"
 			marginHeight="0"
 			frameBorder="0"
-			style="min-height: 100%; min-width: 100%; "
+			style={{ minHeight: '100%', minWidth: '100%' }}
 		/>
 	);
 }
+
+Frame.propTypes = {
+	url: PropTypes.string.isRequired,
+	size: PropTypes.shape({
+		w: PropTypes.number,
+		h: PropTypes.number,
+	}).isRequired,
+};
+export default Frame;

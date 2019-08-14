@@ -2,151 +2,362 @@
  * Slot
  */
 import { h, Component } from 'preact';
-import sendRequest from '../tools/sendRequest';
-import Loader from './Loader';
-import Overlay from './Overlay';
-import BlobFrame from './BlobFrame';
-import UrlFrame from './UrlFrame';
-import Empty from './Empty';
-import AnalyticsBehavior from './Analytics';
-import delay from '../tools/delay';
+import PropTypes from 'prop-types';
+import { InView } from 'react-intersection-observer';
+import uuid4 from 'uuid4';
+import { sendRequest, openUrl, getDeviceData, log, error, warn, delay } from '../tools';
+import { Overlay, UrlFrame, Analytics, AppSafeframe } from '../components';
+import { colors } from './OverlayStyles';
 
-const apiUrl = 'https://stage.ubex.io:8090/v1/slot';
+// eslint-disable-next-line no-undef
+const apiUrl = API_URL;
+const TIME_FOR_IMPRESS = 2;
+const VISIBILITY_THRESHOLD = 0.6;
+const bannerTypes = { dummy: 'BANNER_DUMMY', html: 'BANNER_HTML', image: 'BANNER_IMAGE' };
 
-
-const SHOW_TIME_SECONDS = 60;
 class Slot extends Component {
 	constructor(props) {
 		super(props);
-		this.interval = null;
+		this.loop = null;
+
 		this.state = {
-			seconds: 0,
-			impressionId: 1,
+			loopSeconds: 0,
+			impressionSeconds: 0,
+			clickSeconds: 0,
+			impression: null,
+			requestId: null,
 			impressed: false,
 			innerCode: null,
 			frameUrl: null,
 			isLoading: false,
-			width: null,
-			height: null,
-			clickUrl: 'https://google.com',
+			inView: false,
+			clickUrl: null,
+			hideGUI: true, // скрыть ubex-gui для overlay
+			hidden: false, // скрыт полностью, если загораживает контент
+			closed: false, // реклама не показывается, но слот виден
+			clicked: false,
+			type: null, // тип баннера
+			fallback: false, // у HTML баннеров будет "fallback": true прилетать когда будет прилетать пользовательская заглушка
+			size: props.defaultSize,
 		};
 	}
 
-	// 1) Загружается слот.
 	componentDidMount() {
-		this.runLoop();
+		this.loop = this.runLoop();
+		this.loop();
 	}
 
 	componentWillUnmount() {
-		this.interval = null;
-		delete this.interval;
+		this.loop = null;
+		delete this.loop;
+	}
+
+	shouldComponentUpdate(nextProps, nextState) {
+		return (
+			nextState.fallback !== this.state.fallback ||
+			nextState.isLoading !== this.state.isLoading ||
+			nextState.frameUrl !== this.state.frameUrl ||
+			nextState.innerCode !== this.state.innerCode ||
+			nextState.closed !== this.state.closed ||
+			nextState.hidden !== this.state.hidden ||
+			nextState.size !== this.state.size
+		);
+	}
+
+	setStateAsync(state) {
+		return new Promise(resolve => {
+			this.setState(state, resolve);
+		});
 	}
 
 	runLoop() {
-		// Передается событие
-		this.props.analyticsAPI.sendLoad();
+		// 1) Загружается слот.
 		return async () => {
+			const device = await getDeviceData();
+			await this.props.analyticsAPI.setUbexId();
+			// сервер будет ожидать от слота // site: page, ref
+			const site = { page: window.location.href, ref: document.referrer };
+			// Передается событие
+			await this.analyticsEvent('sendLoad');
+			/* eslint-disable no-await-in-loop */
+			let tryingTime = 0;
 			while (true) {
+				const { inventory } = this.props;
+				const {
+					inView,
+					impressionSeconds,
+					loopSeconds,
+					clicked,
+					clickSeconds,
+					impressed,
+					impression,
+					request,
+					closed,
+					hidden,
+				} = this.state;
+
+				if (closed || hidden) {
+					break;
+				}
+
+				const conds = {
+					firstIteration: loopSeconds === 0,
+					// eslint-disable-next-line no-undef
+					afterClick: clicked && clickSeconds >= GET_AFTER_CLICK,
+					// eslint-disable-next-line no-undef
+					changeImpressed: impressed && loopSeconds >= IMPRESSED_SHOW_SECONDS,
+					// eslint-disable-next-line no-undef
+					chaneNotImpressed: !impressed && loopSeconds >= NOT_IMPRESSED_SHOW_SECONDS,
+				};
+				log(`iterate slot ${this.props.slotId}`, this.state);
+				// TODO: убрать большой try. Сделать два try там где действительно нужно.
 				try {
-					// 2) Слот получает рекламу
-					await this.getAd();
-					// Реклама отображается в слоте.
-					this.setContent(response);
-					// Передается событие с унаикальным guid из шага 1, bid request id и imporession id. Request id создает ssp, impression id создает DSP.
-					this.props.analyticsAPI.sendAdGet(1);
-					// TODO: менять время в зависимости от this.state.impressed;
-					await delay(SHOW_TIME_SECONDS * 1000);
+					// GET AD
+					if (conds.afterClick || conds.firstIteration || conds.changeImpressed || conds.chaneNotImpressed) {
+						await this.setStateAsync({ isLoading: true });
+						// 2) Слот получает рекламу
+						const response = await this.getAd({ device, site }).finally(e =>
+							this.setStateAsync({
+								loopSeconds: 0,
+								impressionSeconds: 0,
+								impressed: false,
+								isLoading: false,
+								clicked: false,
+								clickSeconds: 0,
+							}),
+						);
+						if (response) {
+							// Реклама отображается в слоте.
+							await this.setStateAsync(this.setContent(response));
+							// Передается событие с унаикальным guid из шага 1, bid request id и imporession id.
+							// Request id создает ssp, impression id создает DSP.
+							if (!this.state.fallback) {
+								await this.analyticsEvent('sendAdGet', {
+									impression: this.state.impression,
+									request: this.state.request,
+									inventory: this.state.inventory,
+								});
+							} else if (this.state.impression) {
+								await this.analyticsEvent('sendAdFallback', {
+									request: this.state.request,
+									inventory: this.state.inventory,
+									impression: this.state.impression,
+								});
+							}
+						}
+					}
+
+					// SET IMPRESSION
+					if (inView && !impressed) {
+						if (impressionSeconds < TIME_FOR_IMPRESS) {
+							await this.setStateAsync({ impressionSeconds: impressionSeconds + 1 });
+						} else if (!this.state.fallback) {
+							await this.analyticsEvent('sendAdImp', { impression, request, inventory });
+							await this.setStateAsync({
+								impressed: true,
+								loopSeconds: 0,
+								impressionSeconds: 0,
+							});
+						}
+					} else {
+						await this.setStateAsync({
+							impressionSeconds: 0,
+						});
+					}
+
+					// NEXT ITERATE
+					await delay(1000);
+					await this.setStateAsync({ loopSeconds: this.state.loopSeconds + 1 });
+					if(this.state.clicked) {
+						await this.setStateAsync({ clickSeconds: this.state.clickSeconds + 1 });
+					}
 				} catch (e) {
-					this.handleGetAdError(e);
+					/* ON ERROR */
+					// TODO: перенести в отдельный handler
+					error(e);
+					if (!this.state.fallback) {
+						await this.setStateAsync({ hideGUI: true });
+					}
+					await this.props.analyticsAPI.sendAdFailed(e);
+					await delay(tryingTime * 1000);
+					tryingTime = tryingTime === 0 ? 2 : tryingTime * 2;
 				}
 			}
+			/* eslint-enable no-await-in-loop */
 		};
 	}
 
-	getAd() {
-		this.setState({isLoading: true});
+	getAd({ device, site }) {
+		const xHeaders = this.getXHeaders();
 		return sendRequest({
+			method: 'POST',
 			url: `${apiUrl}?id=${this.props.slotId}`,
+			body: JSON.stringify({ device, site }),
+			headers: { ...xHeaders },
 		})
 			.then(response => {
 				if (!response) {
 					throw new Error('no response');
 				}
+				return JSON.parse(response);
 			})
-			.catch(e => this.handleGetAdError(e)).finally(e => this.setState({
-				isLoading: false,
-			}));
-	}
-
-	handleSlotInView(inView = false) {
-		if(inView && !this.interval){
-			this.interval = setTimeout(()=>{
-				this.props.analyticsAPI.sendAdImp(this.state.impressionId).then(()=>this.setState({
-					impressed: true,
-				}))
-			}, 2000);
-		}else if(!inView && this.interval) {
-			clearInterval(this.interval);
-		}
-	}
-
-	handleGetAdError(error) {
-		console.error(error);
-		// Если кривой баннер или ошибка сразу перезапрашивай
-		return this.getAd();
-	}
-
-	// 4) На рекламу кликают. Те же данные
-	onClickOverlay(e) {
-		const w = window.open(this.state.clickUrl, '_blank');
-		this.props.analyticsAPI.sendAdClick(this.state.impressionId, e.clientX, e.clientY, this.state.seconds);
-		w.focus();
+			.catch(e => {
+				error('ad_get_failed');
+				throw new Error(e);
+			});
 	}
 
 	setContent(response) {
-		const { html, curl, w, h } = JSON.parse(response)[this.props.slotId];
+		// eslint-disable-next-line camelcase
+		const { html, fallback, curl, w, h, url, type, impression, request } = response;
+
+		const params = {};
+
+		if (!w || !h) {
+			params.size = this.props.defaultSize;
+		}
 		if (html) {
-			this.setHtmlContent({ html, w, h });
+			params.innerCode = html;
 		} else if (curl) {
-			this.setCurlContent({ curl, w, h });
+			params.frameUrl = curl;
+		} else {
+			return {
+				hideGUI: true,
+				fallback: true,
+				size: params.size,
+			};
+		}
+
+		if (!impression) {
+			warn('server do not resend "impression"', this.props.slotId);
+		}
+		if (!request) {
+			warn('server do not resend "request"', this.props.slotId);
+		}
+
+		return {
+			...params,
+			impression,
+			request,
+			type,
+			hideGUI: !!fallback,
+			fallback: !!fallback,
+			clickUrl: url,
+			size: { w, h },
+		};
+	}
+
+	// 4) На рекламу кликают. Те же данные
+	handleCustomerClick(e) {
+		console.log('click');
+		this.setState({
+			clicked: true,
+		});
+		if (!this.state.clickUrl) {
+			return;
+		}
+		openUrl(this.state.clickUrl);
+
+		this.analyticsEvent('sendAdClick', {
+			impression: this.state.impression,
+			x: e.clientX,
+			y: e.clientY,
+			after: this.state.loopSeconds,
+		});
+	}
+
+	handleCloseAd(reason) {
+		if (reason === 1) {
+			this.setState({ hidden: true });
+			this.props.element.style.display = 'none';
+		} else {
+			this.setState({ closed: true });
+		}
+		this.analyticsEvent('sendCloseAd', {
+			impression: this.state.impression,
+			reason,
+			after: this.state.loopSeconds,
+		});
+	}
+
+	getRenderComponent() {
+		const { size, innerCode, frameUrl } = this.state;
+		if (!innerCode && !frameUrl) {
+			return null;
+		}
+		if (this.state.frameUrl) {
+			// в banner_html может быть или html с кодом или curl одно из них
+			return <UrlFrame url={frameUrl} size={size} />;
+			// return <AppSafeframe url={frameUrl} size={size} slotId={this.props.slotId}/>;
+		}
+
+		return <AppSafeframe html={innerCode} size={size} slotId={this.props.slotId} />;
+		//return <BlobFrame src={innerCode} size={size} />;
+	}
+
+	analyticsEvent(method, params = {}) {
+		// И не отсылаем статистику если тип баннера dummy
+		if (this.state.type !== bannerTypes.dummy) {
+			this.props.analyticsAPI[method](params);
 		}
 	}
-
-	setHtmlContent({ html, w, h }) {
-		this.setState({
-			innerCode: html,
-			width: w,
-			height: h,
-		});
-	}
-
-	setCurlContent({ curl, w, h }) {
-		this.setState({
-			frameUrl: curl,
-			width: w,
-			height: h,
-		});
-	}
-
 
 	render() {
-		if (this.state.isLoading) {
-			return <Loader />;
+		if (this.state.hidden) {
+			return null;
 		}
-		if (!this.state.innerCode && !this.state.frameUrl) {
-			return <Empty />;
+		if (this.state.fallback) {
+			return <div className="ubx-wrapper">{this.getRenderComponent()}</div>;
 		}
 
 		return (
-			<Overlay onClick={e => this.onClickOverlay(e)} inView={inView => this.handleSlotInView(inView)}>
-				{this.state.innerCode ? (
-					<BlobFrame src={this.state.innerCode} width={this.state.width} height={this.state.height} />
-				) : (
-					<UrlFrame url={this.state.frameUrl} width={this.state.width} height={this.state.height} />
-				)}
-			</Overlay>
+			<InView
+				as="div"
+				className="ubx-wrapper"
+				style={{
+					fontSize: 0,
+					width: this.state.size.w,
+					height: this.state.size.h,
+					outline: `1px solid ${colors.borderColor}`,
+				}}
+				threshold={VISIBILITY_THRESHOLD}
+				onChange={inView => this.setState({ inView })}
+			>
+				{this.getRenderComponent()}
+				<Overlay
+					hideGUI={this.state.hideGUI}
+					size={this.state.size}
+					closed={this.state.closed}
+					onCloseAd={reason => this.handleCloseAd(reason)}
+					onClickAd={e => this.handleCustomerClick(e)}
+				/>
+			</InView>
 		);
 	}
-}
 
-export default AnalyticsBehavior(Slot);
+	getXHeaders() {
+		return {
+			'x-trace': uuid4(),
+			'x-span': uuid4(),
+		};
+	}
+}
+Slot.propTypes = {
+	slotId: PropTypes.string.isRequired,
+	inventory: PropTypes.string.isRequired,
+	defaultSize: PropTypes.shape({
+		w: PropTypes.number,
+		h: PropTypes.number,
+	}).isRequired,
+	analyticsAPI: PropTypes.shape({
+		setUbexId: PropTypes.func,
+		sendLoad: PropTypes.func,
+		sendAdGet: PropTypes.func,
+		sendAdImp: PropTypes.func,
+		sendAdClick: PropTypes.func,
+		sendCloseAd: PropTypes.func,
+		sendAdFailed: PropTypes.func,
+		sendAdFallback: PropTypes.func,
+	}).isRequired,
+};
+export default Analytics(Slot);

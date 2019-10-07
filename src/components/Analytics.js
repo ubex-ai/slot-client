@@ -192,6 +192,7 @@ const AnalyticsBehavior = SlotComponent =>
 					{...this.props}
 					slotId={this.props.slotId}
 					inventory={this.props.inventory}
+					ubexId={this.ubexId}
 					analyticsAPI={{
 						setUbexId: this.setUbexId.bind(this),
 						sendLoad: this.sendLoad.bind(this),

@@ -1,8 +1,0 @@
-{
-	"close": "fermer",
-	"moderationMessage": "Modération en cours",
-	"closeReason.notInteresting": "Pas intéressé",
-	"closeReason.multipleView": "Déjà acheté",
-	"closeReason.contentCover": "La publicité ferme le contenu",
-	"closeReason.unacceptable": "Annonces inacceptables"
-}

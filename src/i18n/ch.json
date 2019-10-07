@@ -1,8 +1,0 @@
-{
-	"close": "关闭",
-	"moderationMessage": "用于审核的广告位",
-	"closeReason.notInteresting": "不感兴趣",
-	"closeReason.multipleView": "已购买",
-	"closeReason.contentCover": "关闭内容",
-	"closeReason.unacceptable": "不可接受的广告"
-}

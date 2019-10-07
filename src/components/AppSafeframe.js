@@ -1,8 +1,7 @@
 import {h, Component} from 'preact';
 import PropTypes from 'prop-types';
 import {renderToStaticMarkup} from "react-dom/server";
-import { warn } from '../tools';
-
+import { warn, error } from '../tools';
 
 class AppSafeframe extends Component {
 	constructor(props) {
@@ -18,7 +17,12 @@ class AppSafeframe extends Component {
 		this.updatePos();
 	}
 
+	shouldComponentUpdate(nextProps, nextState) {
+		return nextProps.html !== this.props.html || nextProps.url !== this.props.url
+	}
+
 	componentWillUnmount() {
+		$sf.host.nuke(this.props.slotId);
 		delete this.pos;
 	}
 
@@ -26,41 +30,22 @@ class AppSafeframe extends Component {
 
 		const { slotId, size, html, url } = this.props;
 		if(!html && !url) {
-			warn('no resource for safeframe');
+			error('no resource for safeframe');
 			return;
 		}
-
-		const cont = document.getElementById(this.props.slotId);
-		if(!cont) {
-			warn('root container not found');
-			return;
-		}
-
-		let sfCont = document.getElementById(`ubx_${this.props.slotId}`);
-		if(sfCont) {
-			return;
-		}
-		sfCont = document.createElement('div');
-		sfCont.id = `ubx_${this.props.slotId}`;
-
-		cont.insertBefore(sfCont, cont.children[0]);
 		$sf.host.nuke(slotId);
 
+		const posConf = {
+			id: slotId,
+			dest: `ubx_${slotId}`,
+			...size,
+		};
 		if(html) {
-			this.pos = new $sf.host.Position({
-				id: slotId,
-				dest: `ubx_${slotId}`,
-				html: html,
-				...size,
-			});
+			posConf.html = html;
 		} else {
-			this.pos = new $sf.host.Position({
-				id: slotId,
-				dest: `ubx_${slotId}`,
-				src: url,
-				...size,
-			});
+			posConf.src = url;
 		}
+		this.pos = new $sf.host.Position(posConf);
 		$sf.host.render(this.pos);
 	}
 }

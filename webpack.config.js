@@ -3,19 +3,22 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const S3Plugin = require('webpack-s3-plugin');
 
 module.exports = function(env, argv) {
 	const devMode = argv.mode !== 'production';
+	const needDeploy = env && env.deploy;
 	const hostname = '0.0.0.0';
 	const port = '8080';
 	const stageApi = 'https://ssp.ubex.io/v1/slot';
 	const analyticApi = 'https://pixel.ubex.io/v2/slot/';
 
-	return {
+	const conf =  {
 		entry: [
 			path.resolve(__dirname, 'node_modules/safeframe/src/js/lib/base.js'),
 			path.resolve(__dirname, 'node_modules/safeframe/src/js/lib/boot.js'),
 			path.resolve(__dirname, 'node_modules/safeframe/src/js/host/host.js'),
+			'./node_modules/promise-polyfill/dist/polyfill.js',
 			'intersection-observer',
 			'./src/index.js',
 		],
@@ -36,9 +39,6 @@ module.exports = function(env, argv) {
 				NOT_IMPRESSED_SHOW_SECONDS: devMode ? 30 : 180,
 				GET_AFTER_CLICK: devMode ? 5 : 15,
 			}),
-			new webpack.ProvidePlugin({
-			       Promise: 'core-js/features/promise'
-	        })
 		],
 		output: {
 			path: path.resolve(__dirname, 'dist'),
@@ -96,4 +96,28 @@ module.exports = function(env, argv) {
 			},
 		},
 	};
+	if(needDeploy){
+		conf.plugins.push(
+			new S3Plugin({
+				// Exclude uploading of html
+				exclude: /.*\.html$/,
+				include: devMode ? 'slot_test.js' : 'slot.js',
+				// s3Options are required
+				s3Options: {
+					accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+					secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+					region: 'us-east-1',
+				},
+				s3UploadOptions: {
+					Bucket: 'static.ubex',
+				},
+				cloudfrontInvalidateOptions: {
+					DistributionId: process.env.CLOUDFRONT_DISTRIBUTION_ID,
+					Items: [devMode ? '/slot_test.js' : '/slot.js'],
+				},
+			})
+		);
+	}
+
+	return conf;
 };

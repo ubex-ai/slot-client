@@ -1,6 +1,9 @@
 import { h, Component } from 'preact';
 import PropTypes from 'prop-types';
 function Frame({ url, size }) {
+	if(!url){
+		return;
+	}
 	return (
 		<iframe
 			title="slotus_url"
@@ -11,7 +14,7 @@ function Frame({ url, size }) {
 			marginWidth="0"
 			marginHeight="0"
 			frameBorder="0"
-			style={{ minHeight: '100%', minWidth: '100%' }}
+			style={{ minHeight: '100%', minWidth: '100%', zIndex: 0 }}
 		/>
 	);
 }

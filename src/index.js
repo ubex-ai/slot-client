@@ -1,11 +1,7 @@
 import { h, render } from 'preact';
-import { IntlProvider } from 'react-intl';
-import getDefaultLocale from './tools/getDefaultLocale';
-import { translations } from './i18n';
 import Slot from './components/Slot';
 import IO from 'intersection-observer';
 // import * as sfEvents from './sfEvents';
-
 
 if(!IntersectionObserver || !window.IntersectionObserver){
 	window.IntersectionObserver = IntersectionObserver = IO;
@@ -16,8 +12,6 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 	NodeList.prototype.forEach = Array.prototype.forEach;
 }
 
-const locale = getDefaultLocale().slice(0, 2);
-
 document.addEventListener('DOMContentLoaded', () => {
 	// console.log('init', w.ubexslot);
 	if (!window.ubexslot || !window.ubexslot.length) {
@@ -27,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const positions = {};
 
 	document.querySelectorAll(`[data-ubex-slot]`).forEach((slot, i) => {
-
 		const slotId = slot.getAttribute('data-ubex-slot');
 		const inventory = slot.getAttribute('data-ubex-inv');
 		slot.setAttribute('id', slotId);
@@ -41,14 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (ubexslot[i] !== slotId) {
 			// console.log(`render: [${i}]: ${slotId}`);
 			render(
-				<IntlProvider locale={locale} messages={translations[locale]}>
-					<Slot
-						slotId={slotId}
-						element={slot}
-						inventory={inventory}
-						defaultSize={{ w: parseInt(slot.style.width), h: parseInt(slot.style.height) }}
-					/>
-				</IntlProvider>,
+				<Slot
+					slotId={slotId}
+					element={slot}
+					inventory={inventory}
+					defaultSize={{ w: parseInt(slot.style.width), h: parseInt(slot.style.height) }}
+				/>,
 				slot,
 			);
 		}
@@ -56,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 	const sfConfig =  new $sf.host.Config({
 		renderFile:	"https://static.ubex.io/r.html",
-		positions: positions,
+		positions,
 		// ...sfEvents,
 	});
 });

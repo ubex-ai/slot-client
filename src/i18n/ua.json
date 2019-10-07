@@ -1,8 +1,0 @@
-{
-	"close": "Закрити",
-	"moderationMessage": "Виконується модерація",
-	"closeReason.notInteresting": "Не зацікавлений",
-	"closeReason.multipleView": "Вже придбано",
-	"closeReason.contentCover": "Реклама закриває вміст",
-	"closeReason.unacceptable": "Неприйнятні оголошення"
-}

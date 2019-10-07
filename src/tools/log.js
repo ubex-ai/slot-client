@@ -2,7 +2,7 @@ const log = (...args) => {
 	if(DEV_MODE || window.ubx_debug) {
 		args.unshift("%c[UBX_DEBUG_LOG] :: ",
 			`color: #8942ae; font-weight: bold; text-shadow: 0 0 5px rgba(0,0,0,0.2);`);
-		console.log.apply(console, args);
+		// console.log.apply(console, args);
 	}
 };
 

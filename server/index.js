@@ -48,7 +48,7 @@ const imgResponse = id => {
 			type: 'BANNER_DUMMY',
 		};
 	// IMAGE
-	}else {
+	} else {
 		response[id] = banners[intId] ? banners[intId] : {};
 	}
 

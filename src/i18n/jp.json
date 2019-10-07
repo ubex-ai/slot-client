@@ -1,8 +1,0 @@
-{
-	"close": "閉じる",
-	"moderationMessage": "進行中のモデレーション",
-	"closeReason.notInteresting": "興味がない",
-	"closeReason.multipleView": "すでに購入済み",
-	"closeReason.contentCover": "広告がコンテンツを閉じます",
-	"closeReason.unacceptable": "不適切な広告"
-}
